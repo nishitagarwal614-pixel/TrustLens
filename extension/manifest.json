@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "TrustLens AI - Financial Content Verifier",
+  "version": "1.0.0",
+  "description": "AI-powered financial content verification and retail investor protection for social media and web articles.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "TrustLens AI Verifier"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

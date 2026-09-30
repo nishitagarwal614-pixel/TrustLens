@@ -1,0 +1,19 @@
+SECURITIES AND EXCHANGE BOARD OF INDIA (SEBI)
+CIRCULAR / REGULATORY DIRECTIVE
+Document: Regulatory Framework for Financial Influencers ("Finfluencers") and Unregistered Investment Advisers
+Circular No: SEBI/HO/MIRSD/2023/142
+Date: August 25, 2023
+Jurisdiction: Indian Capital Markets
+
+PROVISIONS ON CLAIMS AND PROMOTIONAL DISCLOSURES:
+1. Prohibition of Guaranteed Return Assurances:
+Under Regulation 4 of the SEBI (Prohibition of Fraudulent and Unfair Trade Practices) Regulations, no person or intermediary shall promise, assure, or guarantee specific percentage returns (e.g., "guaranteed 30%", "risk-free doubling", "sure-shot profit") on equity shares, derivatives, or mutual fund instruments. Capital markets carry inherent market risk.
+
+2. Mandatory Sponsorship & Affiliation Disclosures:
+Any entity, social media creator, or financial analyst receiving compensation, referral fees, revenue-share incentives, or affiliate bonuses for mentioning financial platforms, brokerage apps, or algorithmic advisory tools must prominently display clear, unambiguous disclosures such as "#Advertisement", "#Sponsored", or "Paid Partnership" at the start of the video, caption, or post.
+
+3. Unregistered Advisory Ban:
+Operating closed VIP groups, Telegram channels, WhatsApp tip groups, or subscription portals giving direct buy/sell target prices and execution timings without SEBI Research Analyst (RA) or Investment Adviser (IA) registration is strictly prohibited under SEBI (Investment Advisers) Regulations, 2013.
+
+4. Investor Redressal:
+Investors misled by unregistered financial advisors or fraudulent return promises are encouraged to lodge formal complaints on the SEBI SCORES portal (scores.gov.in).

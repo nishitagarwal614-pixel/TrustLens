@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TrustLens AI</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ext-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-box">
+        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        <span class="logo-text">TrustLens <strong>AI</strong></span>
+      </div>
+      <span class="tag">Shield Active</span>
+    </header>
+
+    <p class="subtitle">AI-Powered Financial Verification</p>
+
+    <!-- Main action -->
+    <div class="input-section">
+      <textarea id="text-input" placeholder="Select text on the webpage or paste suspicious financial claims here..."></textarea>
+      
+      <div class="btn-group">
+        <button id="btn-get-selection" class="btn btn-secondary">Get Selected Text</button>
+        <button id="btn-analyze" class="btn btn-primary">Analyze Content</button>
+      </div>
+    </div>
+
+    <!-- Status / Loading -->
+    <div id="loading" class="loading-state hidden">
+      <div class="spinner"></div>
+      <p id="loading-msg">Extracting claims & checking red flags...</p>
+    </div>
+
+    <!-- Connection error alert -->
+    <div id="connection-error" class="alert-box alert-error hidden">
+      <strong>Backend Offline</strong>
+      <p>Could not connect to TrustLens local API at <code>localhost:8000</code>. Please ensure the backend server is running.</p>
+    </div>
+
+    <!-- Analysis Results -->
+    <div id="results-card" class="results-box hidden">
+      <div class="result-header">
+        <div>
+          <span class="label">RISK LEVEL</span>
+          <div id="res-risk" class="risk-badge">HIGH</div>
+        </div>
+        <div>
+          <span class="label">STATUS</span>
+          <div id="res-status" class="status-badge">Potential Risk</div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <span class="section-title">Red Flags Detected (<span id="flags-count">0</span>)</span>
+        <ul id="flags-list" class="flags-list"></ul>
+      </div>
+
+      <div class="section-block">
+        <span class="section-title">Claim Status (<span id="claims-count">0</span>)</span>
+        <div id="claims-list" class="claims-list"></div>
+      </div>
+
+      <div class="section-block">
+        <span class="section-title">Disclosure</span>
+        <div id="res-disclosure" class="disclosure-tag">No disclosure detected</div>
+      </div>
+
+      <button id="btn-view-full" class="btn btn-outline">View Full Analysis on Web App &rarr;</button>
+    </div>
+
+    <!-- Footer disclaimer -->
+    <footer class="footer">
+      <small>TrustLens AI does not provide financial advice. Verify before you trust.</small>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

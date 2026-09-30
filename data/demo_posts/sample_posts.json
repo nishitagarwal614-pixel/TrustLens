@@ -1,0 +1,47 @@
+[
+  {
+    "id": "demo-case-1",
+    "title": "High Risk - Guaranteed 50% Rise",
+    "category": "High Risk",
+    "creator": "@RocketTrader99",
+    "content": "XYZ stock is guaranteed to rise 50% next week. Buy immediately! This is a once-in-a-lifetime opportunity. Don't miss out on these risk-free returns!",
+    "expected_risk": "High",
+    "expected_status": "Potential Risk"
+  },
+  {
+    "id": "demo-case-2",
+    "title": "Verified - Official Quarterly Revenue",
+    "category": "Verified",
+    "creator": "@FundamentalAnalyst",
+    "content": "According to XYZ Ltd's quarterly report, revenue increased by 8.4% year-over-year with consolidated revenues reaching INR 4,820 Crore.",
+    "expected_risk": "Safe",
+    "expected_status": "Verified"
+  },
+  {
+    "id": "demo-case-3",
+    "title": "Promotional - Referral Tip Group",
+    "category": "Promotional",
+    "creator": "@CryptoGuru_VIP",
+    "content": "Join our premium stock tips group to double your money quickly! Use my referral code INVEST20 to get 20% off. Only 10 spots left!",
+    "expected_risk": "High",
+    "expected_status": "Potential Risk"
+  },
+  {
+    "id": "demo-case-4",
+    "title": "Educational - Interest Rates Impact",
+    "category": "Educational",
+    "creator": "@MacroEconInsights",
+    "content": "An increase in interest rates can affect borrowing costs and may influence rate-sensitive sectors such as real estate, auto loans, and capital expenditure.",
+    "expected_risk": "Safe",
+    "expected_status": "Verified"
+  },
+  {
+    "id": "demo-case-5",
+    "title": "Contradicted - Speculative Surge Claim",
+    "category": "Contradicted",
+    "creator": "@PennyStockKing",
+    "content": "ABC Tech reported revenue growth of 40% this quarter and the stock will double next month. Buy now before everyone gets rich!",
+    "expected_risk": "High",
+    "expected_status": "Contradicted"
+  }
+]
