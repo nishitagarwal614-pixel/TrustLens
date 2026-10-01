@@ -5,10 +5,6 @@ import { submitReport, fetchReports } from '../services/api';
 export default function ReportsPage() {
   const [reports, setReports] = useState([]);
   const [contentUrl, setContentUrl] = useState('');
-  const [creatorName, setCreatorName] = useState('');
-  const [reason, setReason] = useState('Unregistered advisory / Guaranteed returns');
-  const [detectedClaim, setDetectedClaim] = useState('');
-  const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
   const [error, setError] = useState('');
@@ -25,8 +21,8 @@ export default function ReportsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!reason || !description.trim()) {
-      setError('Please provide a reason and description.');
+    if (!contentUrl.trim()) {
+      setError('Please provide a content URL to report.');
       return;
     }
     setError('');
@@ -34,19 +30,15 @@ export default function ReportsPage() {
 
     try {
       const res = await submitReport({
-        content_url: contentUrl,
-        creator_name: creatorName,
-        reason,
-        description,
-        detected_claim: detectedClaim
+        content_url: contentUrl.trim(),
+        creator_name: '',
+        reason: 'Reported Content URL',
+        description: `Community report for content URL: ${contentUrl.trim()}`,
+        detected_claim: ''
       });
       setSubmissionResult(res);
       loadReports();
-      // Clear form
       setContentUrl('');
-      setCreatorName('');
-      setDetectedClaim('');
-      setDescription('');
     } catch (err) {
       setError(err.message || 'Error recording report. Please retry.');
     } finally {
@@ -60,7 +52,7 @@ export default function ReportsPage() {
       <div className="border-b border-slate-200 pb-4">
         <div className="flex items-center gap-2">
           <AlertOctagon className="w-5 h-5 text-rose-600" />
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Community Reporting & Regulatory Guidance</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Submit Community Intelligence Report</h1>
         </div>
         <p className="text-xs text-slate-500 mt-1">
           Crowdsourced vigilance platform for flagging predatory pump schemes, unverified return promises, and undisclosed promotions.
@@ -122,71 +114,20 @@ export default function ReportsPage() {
               <input
                 type="url"
                 required
-                placeholder="https://twitter.com/... or https://youtube.com/..."
+                placeholder="https://twitter.com/... or https://youtube.com/... or https://t.me/..."
                 value={contentUrl}
                 onChange={(e) => setContentUrl(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-blue-500 text-xs"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Creator Handle / Name</label>
-                <input
-                  type="text"
-                  placeholder="@ChannelName"
-                  value={creatorName}
-                  onChange={(e) => setCreatorName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-blue-500 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Primary Violation Reason *</label>
-                <select
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-blue-500 text-xs bg-white"
-                >
-                  <option value="Unregistered advisory / Guaranteed returns">Unregistered advisory / Guaranteed returns</option>
-                  <option value="Urgency manipulation / Pump and dump">Urgency manipulation / Pump and dump</option>
-                  <option value="Missing #Sponsored disclosure">Missing #Sponsored disclosure</option>
-                  <option value="Contradiction of audited filings">Contradiction of audited filings</option>
-                  <option value="Deceptive subscription or tips funnel">Deceptive subscription or tips funnel</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Specific Deceptive Claim</label>
-              <input
-                type="text"
-                placeholder="e.g. 'Guaranteed 50% profit in 7 days'"
-                value={detectedClaim}
-                onChange={(e) => setDetectedClaim(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-blue-500 text-xs"
-              />
-            </div>
-
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Detailed Description & Context *</label>
-              <textarea
-                rows={3}
-                required
-                placeholder="Explain the misleading elements, dates, or financial promises made..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:border-blue-500 text-xs resize-none"
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
               />
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !contentUrl.trim()}
               className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 disabled:bg-slate-300 text-white font-semibold rounded-lg text-xs shadow-sm transition-all flex items-center justify-center gap-2"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>{loading ? 'Recording Report...' : 'Submit Report'}</span>
+              <span>{loading ? 'Submitting Report...' : 'Submit Report'}</span>
             </button>
           </form>
         </div>

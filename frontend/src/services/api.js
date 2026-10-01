@@ -47,6 +47,12 @@ export async function deleteAnalysisRecord(postId) {
   return await res.json();
 }
 
+export async function clearAllHistory() {
+  const res = await fetch(`${API_BASE}/history`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to clear history');
+  return await res.json();
+}
+
 export async function fetchCreators() {
   const res = await fetch(`${API_BASE}/creators`);
   if (!res.ok) throw new Error('Failed to load creators');

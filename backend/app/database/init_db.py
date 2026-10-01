@@ -211,94 +211,8 @@ def init_database():
             db.add_all([c1, c2, c3])
             db.commit()
 
-            # 2. Sample Historical Posts
+            # 2. Sample User & Learning Attempt
             now = datetime.utcnow()
-            posts_data = [
-                {
-                    "content": "XYZ stock is guaranteed to rise 50% next week. Buy immediately! This is a once-in-a-lifetime opportunity.",
-                    "creator": c2,
-                    "status": "Potential Risk",
-                    "risk": "High",
-                    "rec": True,
-                    "disc": "No disclosure detected",
-                    "explanation": "Critical red flags detected (Guaranteed Returns, Urgency, Unrealistic claims). Unsupported by official exchange records.",
-                    "days_ago": 3,
-                    "claims": [
-                        {"text": "XYZ stock is guaranteed to rise 50% next week", "type": "Future price prediction", "status": "Unverified", "confidence": 0.92},
-                        {"text": "Buy immediately!", "type": "Investment recommendation", "status": "Unverified", "confidence": 0.88}
-                    ],
-                    "flags": [
-                        {"cat": "Guaranteed Returns", "sev": "High", "exp": "The content presents future stock appreciation as guaranteed.", "trig": "guaranteed to rise"},
-                        {"cat": "Urgency", "sev": "Medium", "exp": "Urges immediate execution without time for verification.", "trig": "Buy immediately"}
-                    ]
-                },
-                {
-                    "content": "According to XYZ Ltd's quarterly report, revenue increased by 8.4% year-over-year.",
-                    "creator": c3,
-                    "status": "Verified",
-                    "risk": "Safe",
-                    "rec": False,
-                    "disc": "No disclosure detected",
-                    "explanation": "Claim directly matches audited figures in XYZ Ltd Q3 Financial Results filed with NSE/BSE.",
-                    "days_ago": 2,
-                    "claims": [
-                        {"text": "revenue increased by 8.4% year-over-year", "type": "Official financial metric", "status": "Verified", "confidence": 0.95}
-                    ],
-                    "flags": []
-                },
-                {
-                    "content": "Use my referral code INVEST20 to join my premium stock-tip group. 20% off for the first 50 members!",
-                    "creator": c1,
-                    "status": "Potential Risk",
-                    "risk": "Medium",
-                    "rec": True,
-                    "disc": "Possible promotional content",
-                    "explanation": "Commercial conversion mechanics and referral bonuses detected without formal '#Sponsored' disclosure tags.",
-                    "days_ago": 1,
-                    "claims": [
-                        {"text": "join my premium stock-tip group", "type": "Promotional / Advisory offer", "status": "Unverified", "confidence": 0.91}
-                    ],
-                    "flags": [
-                        {"cat": "Hidden promotion", "sev": "Medium", "exp": "Promotional referral link and premium tip group invitation.", "trig": "referral code INVEST20"}
-                    ]
-                }
-            ]
-
-            for p_info in posts_data:
-                p = Post(
-                    content=p_info["content"],
-                    creator_id=p_info["creator"].id,
-                    overall_status=p_info["status"],
-                    risk_level=p_info["risk"],
-                    recommendation_detected=p_info["rec"],
-                    disclosure_status=p_info["disc"],
-                    explanation=p_info["explanation"],
-                    created_at=now - timedelta(days=p_info["days_ago"])
-                )
-                db.add(p)
-                db.flush()
-
-                for c_item in p_info["claims"]:
-                    c = Claim(
-                        post_id=p.id,
-                        claim_text=c_item["text"],
-                        claim_type=c_item["type"],
-                        status=c_item["status"],
-                        confidence=c_item["confidence"]
-                    )
-                    db.add(c)
-
-                for f_item in p_info["flags"]:
-                    rf = RedFlag(
-                        post_id=p.id,
-                        category=f_item["cat"],
-                        severity=f_item["sev"],
-                        explanation=f_item["exp"],
-                        trigger_text=f_item["trig"]
-                    )
-                    db.add(rf)
-
-            # 3. Sample User & Learning Attempt
             u = User(name="Retail Investor Demo", email="demo@trustlens.ai")
             db.add(u)
             db.flush()
@@ -313,10 +227,10 @@ def init_database():
             )
             db.add(la)
 
-            # 4. Sample Reports
+            # 3. Sample Reports
             r1 = Report(
                 id="TL-849201",
-                post_id=1,
+                post_id=None,
                 content_url="https://twitter.com/DailyPennyPicks/status/1892837",
                 creator_name="@DailyPennyPicks",
                 reason="Unregistered investment advisory & guaranteed returns",

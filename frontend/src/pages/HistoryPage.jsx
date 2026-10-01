@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { History, Trash2, Eye, Filter, Calendar, ExternalLink, AlertOctagon, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
-import { fetchHistory, deleteAnalysisRecord } from '../services/api';
+import { History, Trash2, Eye, Filter, Calendar, ExternalLink, AlertOctagon, CheckCircle2, AlertCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { fetchHistory, deleteAnalysisRecord, clearAllHistory } from '../services/api';
 
-export default function HistoryPage({ onSelectAnalysis }) {
+export default function HistoryPage({ onSelectAnalysis, onNavigate }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
   const [deletingId, setDeletingId] = useState(null);
+  const [clearing, setClearing] = useState(false);
 
   const loadHistory = async (statusFilter = '') => {
     setLoading(true);
     try {
       const data = await fetchHistory(statusFilter === 'All' ? '' : statusFilter);
-      setHistory(data);
+      setHistory(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load history:', err);
+      setHistory([]);
     } finally {
       setLoading(false);
     }
@@ -35,6 +37,19 @@ export default function HistoryPage({ onSelectAnalysis }) {
       alert('Failed to delete analysis: ' + err.message);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!window.confirm('Are you sure you want to clear all verification history records?')) return;
+    setClearing(true);
+    try {
+      await clearAllHistory();
+      setHistory([]);
+    } catch (err) {
+      alert('Failed to clear history: ' + err.message);
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -78,22 +93,35 @@ export default function HistoryPage({ onSelectAnalysis }) {
           </p>
         </div>
 
-        {/* Filter Chips */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <Filter className="w-3.5 h-3.5 text-slate-400 mr-1" />
-          {filters.map((f) => (
+        {/* Filter Chips & Actions */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <Filter className="w-3.5 h-3.5 text-slate-400 mr-1" />
+            {filters.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
+                  filter === f
+                    ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-sm'
+                    : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          {history.length > 0 && (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
-                filter === f
-                  ? 'bg-blue-600 border-blue-600 text-white font-bold shadow-sm'
-                  : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'
-              }`}
+              onClick={handleClearAll}
+              disabled={clearing}
+              className="text-xs px-3 py-1.5 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 font-medium transition-all flex items-center gap-1.5 ml-auto sm:ml-2"
+              title="Clear all verification history"
             >
-              {f}
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>{clearing ? 'Clearing...' : 'Clear All'}</span>
             </button>
-          ))}
+          )}
         </div>
       </div>
 
@@ -104,12 +132,34 @@ export default function HistoryPage({ onSelectAnalysis }) {
           <p className="text-xs">Loading verification records...</p>
         </div>
       ) : history.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-500">
-          <History className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <p className="font-semibold text-slate-700">No verification records found.</p>
-          <p className="text-xs text-slate-400 mt-1">
-            Analyze a financial post to populate your verification audit history.
+        <div className="bg-white rounded-2xl border border-slate-200 p-10 sm:p-14 text-center shadow-sm max-w-lg mx-auto my-6">
+          <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400 border border-slate-200">
+            <History className="w-7 h-7 text-slate-400" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 tracking-tight">No history available</h3>
+          <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">
+            {filter !== 'All'
+              ? 'There is no verification history matching the selected filter.'
+              : 'No past content verifications have been recorded yet. Analyze a financial post or link to populate your verification audit history.'}
           </p>
+          <div className="mt-6 flex items-center justify-center gap-2.5">
+            {filter !== 'All' && (
+              <button
+                onClick={() => setFilter('All')}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors"
+              >
+                Reset Filter
+              </button>
+            )}
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('analyze')}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors"
+              >
+                Analyze Content
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

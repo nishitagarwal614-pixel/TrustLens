@@ -114,3 +114,15 @@ def delete_analysis_record(post_id: int, db: Session = Depends(get_db)):
     db.delete(post)
     db.commit()
     return {"status": "success", "message": f"Analysis {post_id} removed."}
+
+@router.delete("/history")
+def clear_all_history(db: Session = Depends(get_db)):
+    from app.models.database_models import Report
+    db.query(Report).filter(Report.post_id.isnot(None)).update({"post_id": None})
+    db.query(Evidence).delete()
+    db.query(RedFlag).delete()
+    db.query(Claim).delete()
+    db.query(Post).delete()
+    db.commit()
+    return {"status": "success", "message": "All verification history removed."}
+

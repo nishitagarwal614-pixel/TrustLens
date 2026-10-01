@@ -27,7 +27,6 @@ export default function Footer({ onNavigate }) {
             <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">Verification Tools</h4>
             <ul className="space-y-2 text-xs">
               <li><button onClick={() => onNavigate('analyze')} className="hover:text-white transition-colors">Analyze Financial Post</button></li>
-              <li><button onClick={() => onNavigate('dashboard')} className="hover:text-white transition-colors">Metrics Dashboard</button></li>
               <li><button onClick={() => onNavigate('creators')} className="hover:text-white transition-colors">Creator Transparency Profiles</button></li>
               <li><button onClick={() => onNavigate('simulator')} className="hover:text-white transition-colors">Red Flag Simulator</button></li>
             </ul>

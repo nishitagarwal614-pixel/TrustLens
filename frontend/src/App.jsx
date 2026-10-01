@@ -3,7 +3,6 @@ import Navbar from './components/Navbar';
 import DisclaimerBanner from './components/DisclaimerBanner';
 import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
-import DashboardPage from './pages/DashboardPage';
 import AnalyzePage from './pages/AnalyzePage';
 import HistoryPage from './pages/HistoryPage';
 import CreatorProfilesPage from './pages/CreatorProfilesPage';
@@ -75,9 +74,6 @@ export default function App() {
           />
         )}
 
-        {activePage === 'dashboard' && (
-          <DashboardPage onNavigate={handleNavigate} />
-        )}
 
         {activePage === 'analyze' && (
           <AnalyzePage
@@ -88,7 +84,10 @@ export default function App() {
         )}
 
         {activePage === 'history' && (
-          <HistoryPage onSelectAnalysis={handleSelectHistoryItem} />
+          <HistoryPage 
+            onSelectAnalysis={handleSelectHistoryItem} 
+            onNavigate={handleNavigate}
+          />
         )}
 
         {activePage === 'creators' && (
