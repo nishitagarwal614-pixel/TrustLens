@@ -1,15 +1,16 @@
 const API_BASE = '/api';
 
-export async function analyzeContent(content, sourceUrl = '', creatorName = '') {
+export async function analyzeContent(content, sourceUrl = '', creatorName = '', imageFile = null) {
   try {
+    const formData = new FormData();
+    if (content) formData.append('content', content);
+    if (sourceUrl) formData.append('source_url', sourceUrl);
+    if (creatorName) formData.append('creator_name', creatorName);
+    if (imageFile) formData.append('image', imageFile);
+
     const res = await fetch(`${API_BASE}/analyze`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        content,
-        source_url: sourceUrl,
-        creator_name: creatorName
-      })
+      body: formData
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Analysis failed' }));

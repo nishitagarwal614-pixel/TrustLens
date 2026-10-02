@@ -1,4 +1,80 @@
 from typing import List, Dict, Any, Tuple
+from urllib.parse import urlparse
+
+
+OFFICIAL_DOMAINS = {
+    "sebi.gov.in",
+    "rbi.org.in",
+    "nseindia.com",
+    "bseindia.com",
+    "gov.in",
+    "nic.in",
+}
+
+
+def get_domain(url: str) -> str:
+    try:
+        return urlparse(url).netloc.lower().replace(
+            "www.",
+            ""
+        )
+    except Exception:
+        return ""
+
+
+def is_authoritative(url: str) -> bool:
+    domain = get_domain(url)
+
+    return any(
+        domain == official
+        or domain.endswith("." + official)
+        for official in OFFICIAL_DOMAINS
+    )
+
+
+def _relevant_evidence(
+    claim_text: str,
+    evidence: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+
+    claim_words = {
+        word.lower().strip(".,!?():;\"'")
+        for word in claim_text.split()
+        if len(word) >= 4
+    }
+
+    matches = []
+
+    for item in evidence:
+
+        page_text = (
+            item.get("page_text")
+            or item.get("excerpt")
+            or ""
+        ).lower()
+
+        if not page_text:
+            continue
+
+        matched_words = [
+            word
+            for word in claim_words
+            if word in page_text
+        ]
+
+        # This is only evidence retrieval.
+        # It is NOT used to declare a claim true.
+        if len(matched_words) >= max(
+            2,
+            min(
+                6,
+                len(claim_words) // 3
+            )
+        ):
+            matches.append(item)
+
+    return matches
+
 
 def verify_claims_with_evidence(
     claims: List[Dict[str, Any]],
@@ -6,75 +82,74 @@ def verify_claims_with_evidence(
     red_flags: List[Dict[str, Any]],
     disclosure: Dict[str, Any]
 ) -> Tuple[str, str, str]:
-    """
-    Evaluates claims against retrieved evidence and red flags to determine:
-    1. Claim-level verification status (Verified, Partially Verified, Unverified, Contradicted)
-    2. Overall status (Verified, Partially Verified, Unverified, Contradicted, Potential Risk)
-    3. Risk level (High, Medium, Low, Safe)
-    4. Explanatory rationale
-    """
-    has_contradiction = False
-    has_verification = False
+
+    if not claims:
+        return (
+            "Unverifiable",
+            "Low",
+            "No factual claim could be extracted from the supplied content."
+        )
+
+    has_supported = False
+    has_contradicted = False
     has_unverified = False
 
-    # Check evidence text against claim text
     for claim in claims:
-        claim_text_lower = claim["text"].lower()
-        matched_evidence = []
 
-        for ev in evidence_list:
-            ev_excerpt_lower = ev["excerpt"].lower()
+        relevant = _relevant_evidence(
+            claim["text"],
+            evidence_list
+        )
 
-            # Case: Contradiction on numbers / growth claims
-            if ("40%" in claim_text_lower or "50%" in claim_text_lower) and ("8.4%" in ev_excerpt_lower or "factually incorrect" in ev_excerpt_lower or "speculative" in ev_excerpt_lower):
-                claim["status"] = "Contradicted"
-                ev["status"] = "Contradicts"
-                matched_evidence.append(ev)
-                has_contradiction = True
-            elif ("8.4%" in claim_text_lower and "8.4%" in ev_excerpt_lower) or ("interest rate" in claim_text_lower and "borrowing cost" in ev_excerpt_lower) or ("15,642" in claim_text_lower and "15,642" in ev_excerpt_lower):
-                claim["status"] = "Verified"
-                ev["status"] = "Supports"
-                matched_evidence.append(ev)
-                has_verification = True
-            elif ("30%" in claim_text_lower and "speculative and unverified" in ev_excerpt_lower):
-                claim["status"] = "Contradicted"
-                ev["status"] = "Contradicts"
-                matched_evidence.append(ev)
-                has_contradiction = True
+        authoritative = [
+            item
+            for item in relevant
+            if is_authoritative(
+                item.get(
+                    "source_url",
+                    ""
+                )
+            )
+        ]
 
-        claim["evidence"] = matched_evidence if matched_evidence else []
+        claim["evidence"] = (
+            authoritative
+            if authoritative
+            else relevant
+        )
 
-        if claim["status"] == "Unverified":
+        # Important:
+        # Retrieval alone does NOT prove a claim.
+        # Semantic verification happens in the LLM layer.
+        claim["status"] = "Unverified"
+        claim["confidence"] = None
+
+        if claim["evidence"]:
+            for item in claim["evidence"]:
+                item["status"] = "Inconclusive"
+
+        else:
             has_unverified = True
 
-    # Assess overall status and risk level
-    high_severity_flags = [f for f in red_flags if f.get("severity") == "High"]
-    med_severity_flags = [f for f in red_flags if f.get("severity") == "Medium"]
+    # Until semantic verification happens,
+    # the safe result is unverified.
+    if has_contradicted:
+        return (
+            "Contradicted",
+            "High",
+            "The supplied claim conflicts with authoritative evidence."
+        )
 
-    if has_contradiction:
-        overall_status = "Contradicted"
-        risk_level = "High"
-        explanation = "The content contains claims that directly conflict with audited corporate disclosures or regulatory records."
-    elif high_severity_flags:
-        overall_status = "Potential Risk"
-        risk_level = "High"
-        flags_str = ", ".join([f["type"] for f in high_severity_flags])
-        explanation = f"Critical red flags were detected ({flags_str}). The claim makes aggressive or guaranteed return assertions unsupported by verifiable regulatory filings."
-    elif med_severity_flags or disclosure.get("status") == "Possible promotional content":
-        overall_status = "Potential Risk"
-        risk_level = "Medium"
-        explanation = "The content displays urgency, marketing funnel mechanics, or promotional incentives without formal sponsorship disclosures."
-    elif has_verification and not has_unverified:
-        overall_status = "Verified"
-        risk_level = "Safe"
-        explanation = "All extracted claims are corroborated by official exchange filings or central bank publications."
-    elif has_verification and has_unverified:
-        overall_status = "Partially Verified"
-        risk_level = "Low"
-        explanation = "Some statements are supported by official documents, while other assertions lack direct documentary corroboration."
-    else:
-        overall_status = "Unverified"
-        risk_level = "Medium" if claims else "Low"
-        explanation = "No reliable supporting evidence was found in the available official exchange and regulatory sources."
+    if has_supported and not has_unverified:
+        return (
+            "Verified",
+            "Low",
+            "The supplied claim is supported by authoritative evidence."
+        )
 
-    return overall_status, risk_level, explanation
+    return (
+        "Unverified",
+        "Medium",
+        "Relevant information could not be established as sufficient "
+        "evidence for the supplied claim."
+    )

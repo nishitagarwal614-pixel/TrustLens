@@ -9,6 +9,7 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
   const [content, setContent] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
   const [creatorName, setCreatorName] = useState('');
+  const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -30,8 +31,8 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
     const targetUrl = urlToAnalyze !== undefined ? urlToAnalyze : sourceUrl;
     const targetCreator = creatorToAnalyze !== undefined ? creatorToAnalyze : creatorName;
 
-    if (!targetContent || targetContent.trim().length < 5) {
-      setError('Please enter at least 5 characters of financial content to analyze.');
+    if (!targetContent && !targetUrl && !imageFile) {
+      setError('Please provide text, an image, or a URL to analyze.');
       return;
     }
 
@@ -40,7 +41,7 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
     setResult(null);
 
     try {
-      const data = await analyzeContent(targetContent, targetUrl, targetCreator);
+      const data = await analyzeContent(targetContent, targetUrl, targetCreator, imageFile);
       setResult(data);
     } catch (err) {
       console.error('Analyze failed:', err);
@@ -54,6 +55,7 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
     setContent('');
     setSourceUrl('');
     setCreatorName('');
+    setImageFile(null);
     setError('');
     setResult(null);
   };
@@ -136,12 +138,29 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
           </div>
         </div>
 
+        {/* Image Upload Option */}
+        <div className="pt-2">
+          <label className="block text-[11px] font-semibold text-slate-500 mb-1">Evidence Image (Optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files[0] || null)}
+            className="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+          {imageFile && (
+            <div className="mt-2 text-xs flex items-center gap-2">
+              <span className="truncate max-w-[200px] text-slate-600">{imageFile.name}</span>
+              <button onClick={() => setImageFile(null)} className="text-rose-500 hover:text-rose-700 underline text-[10px]">Remove</button>
+            </div>
+          )}
+        </div>
+
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleAnalyze()}
-              disabled={loading || !content.trim()}
+              disabled={loading || (!content.trim() && !sourceUrl.trim() && !imageFile)}
               className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold text-xs shadow-sm transition-all hover:scale-102 active:scale-98"
             >
               <Search className="w-3.5 h-3.5" />
