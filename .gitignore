@@ -46,17 +46,3 @@ desktop.ini
 .idea/
 *.swp
 *.swo
-
-# Local environment secrets
-.env
-*.env
-backend/.env
-
-# Python cache
-__pycache__/
-*.py[cod]
-.pytest_cache/
-venv/
-
-# Node dependencies
-node_modules/

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { AlertOctagon, CheckCircle2, ExternalLink, ShieldAlert, FileText, Send, Plus } from 'lucide-react';
 import { submitReport, fetchReports } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ReportsPage() {
+  const { t } = useLanguage();
   const [reports, setReports] = useState([]);
   const [contentUrl, setContentUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,10 +54,12 @@ export default function ReportsPage() {
       <div className="border-b border-slate-200 pb-4">
         <div className="flex items-center gap-2">
           <AlertOctagon className="w-5 h-5 text-rose-600" />
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Submit Community Intelligence Report</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            {t?.reports?.title || 'Community Scam & Red-Flag Reports'}
+          </h1>
         </div>
         <p className="text-xs text-slate-500 mt-1">
-          Crowdsourced vigilance platform for flagging predatory pump schemes, unverified return promises, and undisclosed promotions.
+          {t?.reports?.subtitle || 'Crowdsourced vigilance platform for flagging predatory pump schemes, unverified return promises, and undisclosed promotions.'}
         </p>
       </div>
 
@@ -66,7 +70,7 @@ export default function ReportsPage() {
           <span>Statutory Regulatory Reporting Notice</span>
         </div>
         <p className="text-amber-800 leading-relaxed text-[11px]">
-          TrustLens AI records reports for collective investor awareness and algorithmic audit weighting. Unless explicitly confirmed, <strong>this application does NOT directly transmit reports to SEBI or statutory law enforcement</strong>. For statutory legal redressal, please utilize the official portals listed below.
+          सतर्क SIGHT AI records reports for collective investor awareness and algorithmic audit weighting. Unless explicitly confirmed, <strong>this application does NOT directly transmit reports to SEBI or statutory law enforcement</strong>. For statutory legal redressal, please utilize the official portals listed below.
         </p>
       </div>
 

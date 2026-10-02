@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { History, Trash2, Eye, Filter, Calendar, ExternalLink, AlertOctagon, CheckCircle2, AlertCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { fetchHistory, deleteAnalysisRecord, clearAllHistory } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function HistoryPage({ onSelectAnalysis, onNavigate }) {
+  const { t } = useLanguage();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
@@ -56,11 +58,15 @@ export default function HistoryPage({ onSelectAnalysis, onNavigate }) {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Verified':
-        return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Verified</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-[#138808]" /> Verified</span>;
       case 'Contradicted':
-        return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 flex items-center gap-1"><XCircle className="w-3 h-3" /> Contradicted</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 flex items-center gap-1"><XCircle className="w-3 h-3 text-[#ED1C24]" /> Contradicted</span>;
+      case 'Partially Verified':
+        return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-[#E09F00]" /> Partially Verified</span>;
       case 'Potential Risk':
-        return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Potential Risk</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-[#C62828] flex items-center gap-1"><AlertOctagon className="w-3 h-3 text-[#C62828]" /> Potential Risk</span>;
+      case 'Unverified':
+        return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 flex items-center gap-1"><AlertCircle className="w-3 h-3 text-[#123A8C]" /> Unverified</span>;
       default:
         return <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-800 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {status}</span>;
     }
@@ -86,10 +92,12 @@ export default function HistoryPage({ onSelectAnalysis, onNavigate }) {
         <div>
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-blue-600" />
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Verification History</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              {t?.history?.title || 'Verification History'}
+            </h1>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Audit trail of analyzed financial posts, extracted claims, and detected red-flag violations.
+            {t?.history?.subtitle || 'Audit trail of analyzed financial posts, extracted claims, and detected red-flag violations.'}
           </p>
         </div>
 
@@ -115,11 +123,11 @@ export default function HistoryPage({ onSelectAnalysis, onNavigate }) {
             <button
               onClick={handleClearAll}
               disabled={clearing}
-              className="text-xs px-3 py-1.5 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 font-medium transition-all flex items-center gap-1.5 ml-auto sm:ml-2"
+              className="text-xs px-3 py-1.5 rounded-lg border border-rose-200 hover:bg-rose-50 text-rose-600 font-medium transition-all flex items-center gap-1.5 ml-auto sm:ml-2 cursor-pointer"
               title="Clear all verification history"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>{clearing ? 'Clearing...' : 'Clear All'}</span>
+              <span>{clearing ? 'Clearing...' : (t?.history?.btnClearAll || 'Clear All')}</span>
             </button>
           )}
         </div>
@@ -129,14 +137,16 @@ export default function HistoryPage({ onSelectAnalysis, onNavigate }) {
       {loading ? (
         <div className="py-16 text-center text-slate-400">
           <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-xs">Loading verification records...</p>
+          <p className="text-xs">{t?.landing?.scanning || 'Loading verification records...'}</p>
         </div>
       ) : history.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-10 sm:p-14 text-center shadow-sm max-w-lg mx-auto my-6">
           <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400 border border-slate-200">
             <History className="w-7 h-7 text-slate-400" />
           </div>
-          <h3 className="text-xl font-bold text-slate-800 tracking-tight">No history available</h3>
+          <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+            {t?.history?.empty || 'No history available'}
+          </h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">
             {filter !== 'All'
               ? 'There is no verification history matching the selected filter.'

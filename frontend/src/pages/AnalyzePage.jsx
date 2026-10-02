@@ -4,12 +4,14 @@ import { analyzeContent } from '../services/api';
 import AnalysisLoading from '../components/AnalysisLoading';
 import ResultPage from './ResultPage';
 import { DEMO_PRESETS } from '../data/demoData';
+import { useLanguage } from '../context/LanguageContext';
+import VoiceInputButton from '../components/VoiceInputButton';
 
 export default function AnalyzePage({ initialPreset = null, autoRun = false, onNavigate }) {
+  const { t, language } = useLanguage();
   const [content, setContent] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
   const [creatorName, setCreatorName] = useState('');
-  const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -31,8 +33,8 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
     const targetUrl = urlToAnalyze !== undefined ? urlToAnalyze : sourceUrl;
     const targetCreator = creatorToAnalyze !== undefined ? creatorToAnalyze : creatorName;
 
-    if (!targetContent && !targetUrl && !imageFile) {
-      setError('Please provide text, an image, or a URL to analyze.');
+    if (!targetContent || targetContent.trim().length < 5) {
+      setError('Please enter at least 5 characters of financial content to analyze.');
       return;
     }
 
@@ -41,7 +43,7 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
     setResult(null);
 
     try {
-      const data = await analyzeContent(targetContent, targetUrl, targetCreator, imageFile);
+      const data = await analyzeContent(targetContent, targetUrl, targetCreator);
       setResult(data);
     } catch (err) {
       console.error('Analyze failed:', err);
@@ -55,7 +57,6 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
     setContent('');
     setSourceUrl('');
     setCreatorName('');
-    setImageFile(null);
     setError('');
     setResult(null);
   };
@@ -72,9 +73,11 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
     <div className="max-w-5xl mx-auto py-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Analyze Financial Content</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          {t?.analyze?.title || 'Analyze Financial Content'}
+        </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Paste any financial post, tweet, video caption, or advisory claim to run a comprehensive forensic verification against official sources.
+          {t?.analyze?.subtitle || 'Paste any financial post, tweet, video caption, or advisory claim to run a comprehensive forensic verification against official sources.'}
         </p>
       </div>
 
@@ -84,7 +87,7 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
         <div>
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Load Example Scenario:</span>
+            <span>{t?.landing?.demoSectionTitle || 'Load Example Scenario:'}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {DEMO_PRESETS.map((p) => (
@@ -103,11 +106,23 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
           </div>
         </div>
 
-        {/* Text Input */}
-        <div>
+        {/* Text Input with Voice Option */}
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="block text-xs font-bold text-slate-700">
+              Financial Claim / Post Content:
+            </label>
+            <VoiceInputButton
+              buttonText="Speak Financial Content"
+              lang={language}
+              onTranscript={(spoken) => {
+                setContent((prev) => prev && prev.trim() ? `${prev.trim()} ${spoken}` : spoken);
+              }}
+            />
+          </div>
           <textarea
             rows={5}
-            placeholder="Paste a financial post, caption, article or claim here... e.g. 'XYZ stock is guaranteed to rise 50% next week. Buy now!'"
+            placeholder={t?.analyze?.placeholderContent || "Paste a financial post, caption, article or claim here... e.g. 'XYZ stock is guaranteed to rise 50% next week. Buy now!'"}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full p-4 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-sans"
@@ -117,7 +132,9 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
         {/* Optional Metadata: URL & Creator */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Source URL (Optional)</label>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+              {t?.analyze?.labelUrl || 'Source URL (Optional)'}
+            </label>
             <input
               type="url"
               placeholder="https://twitter.com/... or https://telegram.me/..."
@@ -127,7 +144,9 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
             />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">Creator / Profile Handle (Optional)</label>
+            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+              {t?.analyze?.labelCreator || 'Creator / Profile Handle (Optional)'}
+            </label>
             <input
               type="text"
               placeholder="@CreatorHandle"
@@ -138,41 +157,24 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
           </div>
         </div>
 
-        {/* Image Upload Option */}
-        <div className="pt-2">
-          <label className="block text-[11px] font-semibold text-slate-500 mb-1">Evidence Image (Optional)</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files[0] || null)}
-            className="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-          {imageFile && (
-            <div className="mt-2 text-xs flex items-center gap-2">
-              <span className="truncate max-w-[200px] text-slate-600">{imageFile.name}</span>
-              <button onClick={() => setImageFile(null)} className="text-rose-500 hover:text-rose-700 underline text-[10px]">Remove</button>
-            </div>
-          )}
-        </div>
-
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleAnalyze()}
-              disabled={loading || (!content.trim() && !sourceUrl.trim() && !imageFile)}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold text-xs shadow-sm transition-all hover:scale-102 active:scale-98"
+              disabled={loading || !content.trim()}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold text-xs shadow-sm transition-all hover:scale-102 active:scale-98 cursor-pointer"
             >
               <Search className="w-3.5 h-3.5" />
-              <span>{loading ? 'Analyzing Content...' : 'Analyze Content'}</span>
+              <span>{loading ? (t?.landing?.scanning || 'Analyzing Content...') : (t?.analyze?.btnAnalyze || 'Analyze Content')}</span>
             </button>
 
             <button
               onClick={handleClear}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Clear</span>
+              <span>{t?.analyze?.btnReset || 'Clear'}</span>
             </button>
           </div>
 

@@ -43,7 +43,7 @@ export default function CreatorProfilesPage({ onNavigate }) {
       <div className="bg-blue-50/70 border border-blue-200 rounded-lg p-3 text-xs text-blue-900 flex items-start gap-2.5">
         <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
         <div className="leading-relaxed">
-          <strong>Transparency Principle:</strong> TrustLens AI does NOT compute arbitrary subjective "truth scores". Instead, we publish raw empirical corroboration metrics so retail investors can formulate their own independent judgment.
+          <strong>Transparency Principle:</strong> सतर्क SIGHT AI does NOT compute arbitrary subjective "truth scores". Instead, we publish raw empirical corroboration metrics so retail investors can formulate their own independent judgment.
         </div>
       </div>
 

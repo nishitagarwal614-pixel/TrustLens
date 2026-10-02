@@ -1,74 +1,78 @@
 import React from 'react';
 import { Shield, ExternalLink, CheckCircle } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Footer({ onNavigate }) {
+  const { t } = useLanguage();
+
   return (
-    <footer className="bg-slate-900 border-t border-slate-800 text-slate-400 text-xs mt-auto">
+    <footer className="bg-[#0B2E73] border-t-2 border-[#FF9933] text-blue-100/80 text-xs mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand info */}
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2 text-white font-bold text-base">
-              <Shield className="w-5 h-5 text-blue-400" />
-              <span>TrustLens AI</span>
+              <img 
+                src="/satark-sight-white.png" 
+                alt="सतर्क SIGHT" 
+                className="h-8 w-auto object-contain"
+              />
+              <span className="text-white font-bold text-xs bg-[#4635B1] px-1.5 py-0.5 rounded border border-[#4635B1]">
+                AI
+              </span>
             </div>
-            <p className="text-slate-400 text-xs leading-relaxed max-w-md">
-              AI-powered financial content verification and retail-investor protection platform.
-              Detects unverified return guarantees, urgency tactics, hidden affiliate funnels, and conflicts with official stock exchange filings.
+            <p className="text-blue-100/75 text-xs leading-relaxed max-w-md">
+              {t?.footer?.about || 'AI-powered financial content verification and retail-investor protection platform.'}
             </p>
-            <div className="flex items-center gap-2 text-emerald-400 text-[11px] font-medium pt-1">
-              <CheckCircle className="w-3.5 h-3.5" />
-              <span>Demo Mode Active • Local Document Knowledge Base Indexed</span>
+            <div className="flex items-center gap-2 text-[#138808] bg-white/95 px-2.5 py-1 rounded-md text-[11px] font-medium pt-1 w-fit shadow-xs">
+              <CheckCircle className="w-3.5 h-3.5 text-[#138808]" />
+              <span className="text-[#172033] font-semibold">SEBI &amp; RBI Guidelines • NSE &amp; BSE Filings Verified</span>
             </div>
           </div>
 
           {/* Quick links */}
           <div>
-            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">Verification Tools</h4>
+            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">
+              {t?.footer?.tools || 'Verification Tools'}
+            </h4>
             <ul className="space-y-2 text-xs">
-              <li><button onClick={() => onNavigate('analyze')} className="hover:text-white transition-colors">Analyze Financial Post</button></li>
-              <li><button onClick={() => onNavigate('creators')} className="hover:text-white transition-colors">Creator Transparency Profiles</button></li>
-              <li><button onClick={() => onNavigate('simulator')} className="hover:text-white transition-colors">Red Flag Simulator</button></li>
+              <li><button onClick={() => onNavigate('analyze')} className="hover:text-white transition-colors cursor-pointer">{t?.nav?.analyze || 'Analyze Financial Post'}</button></li>
+              <li><button onClick={() => onNavigate('simulator')} className="hover:text-white transition-colors cursor-pointer">{t?.nav?.simulator || 'Red Flag Simulator'}</button></li>
+              <li><button onClick={() => onNavigate('reports')} className="hover:text-white transition-colors cursor-pointer">{t?.nav?.reports || 'Submit Community Report'}</button></li>
+              <li><button onClick={() => onNavigate('welcome')} className="hover:text-blue-300 text-blue-400 font-medium transition-colors cursor-pointer">🌐 {t?.footer?.langSetup || 'Language & Profile Setup'}</button></li>
             </ul>
           </div>
 
           {/* Regulatory Guidance Links */}
           <div>
-            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">Statutory Portals</h4>
+            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-3">
+              {t?.footer?.statutory || 'Statutory Portals'}
+            </h4>
             <ul className="space-y-2 text-xs">
               <li>
                 <a href="https://scores.sebi.gov.in" target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
-                  <span>SEBI SCORES 2.0</span>
+                  <span>{t?.footer?.sebiScores || 'SEBI SCORES 2.0'}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </li>
               <li>
                 <a href="https://cybercrime.gov.in" target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
-                  <span>National Cyber Crime</span>
+                  <span>{t?.footer?.cyberCrime || 'National Cyber Crime'}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </li>
               <li>
                 <a href="https://www.nseindia.com" target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-white transition-colors">
-                  <span>NSE Corporate Filings</span>
+                  <span>{t?.footer?.nseFilings || 'NSE Corporate Filings'}</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('reports')} className="hover:text-white transition-colors">Submit Community Report</button>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom mandatory disclaimer */}
-        <div className="pt-6 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <p className="leading-relaxed text-center md:text-left">
-            <strong>Disclaimer:</strong> TrustLens AI provides informational verification and financial-literacy assistance. It does not provide investment advice or guarantee the accuracy of market outcomes. Never base investment decisions solely on automated tool outputs.
-          </p>
-          <div className="flex-shrink-0 text-slate-400">
-            <span>TrustLens AI © 2025 • Hackathon Edition</span>
-          </div>
+        <div className="pt-6 border-t border-white/10 text-center text-blue-200/60 text-[11px]">
+          <p>{t?.footer?.copyright || 'सतर्क SIGHT AI • Built for retail investor safety. Not financial advice.'}</p>
         </div>
       </div>
     </footer>

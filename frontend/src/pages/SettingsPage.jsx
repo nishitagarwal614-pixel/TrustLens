@@ -22,8 +22,10 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function SettingsPage() {
+  const { t } = useLanguage();
   const defaultProfile = {
     fullName: '',
     email: '',
@@ -157,9 +159,11 @@ export default function SettingsPage() {
             <User className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Profile & Account Settings</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              {t?.settings?.title || 'Profile & Account Settings'}
+            </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Manage your personal investor details, verification preferences, alert configurations, and security settings.
+              {t?.settings?.subtitle || 'Manage your personal investor details, verification preferences, alert configurations, and security settings.'}
             </p>
           </div>
         </div>
@@ -178,40 +182,40 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={() => setActiveTab('profile')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'profile'
               ? 'bg-blue-600 text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
           <User className="w-4 h-4" />
-          <span>Profile Details</span>
+          <span>{t?.settings?.tabProfile || 'Profile Details'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('preferences')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'preferences'
               ? 'bg-blue-600 text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
           <Sliders className="w-4 h-4" />
-          <span>Verification & Alerts</span>
+          <span>{t?.settings?.tabAlerts || 'Verification & Alerts'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('security')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'security'
               ? 'bg-blue-600 text-white shadow-sm'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
           <Lock className="w-4 h-4" />
-          <span>Security & Login</span>
+          <span>{t?.settings?.tabSecurity || 'Security & Login'}</span>
         </button>
       </div>
 
@@ -442,7 +446,7 @@ export default function SettingsPage() {
             <div className="border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-900">Verification Engine Defaults</h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Customize how TrustLens AI checks and flags potential financial fraud.
+                Customize how सतर्क SIGHT AI checks and flags potential financial fraud.
               </p>
             </div>
 
@@ -622,7 +626,7 @@ export default function SettingsPage() {
                 <span className="text-sm font-bold text-slate-900">Current Device • Online</span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Windows PC • TrustLens Desktop Client • Session initiated today
+                Windows PC • सतर्क SIGHT Desktop Client • Session initiated today
               </p>
             </div>
           </div>

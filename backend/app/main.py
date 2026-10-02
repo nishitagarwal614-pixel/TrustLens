@@ -58,10 +58,10 @@ app.include_router(evidence.router, prefix="/api", tags=["Evidence"])
 def root():
     return {
         "status": "online",
-        "system": "TrustLens AI",
+        "system": "सतर्क SIGHT AI",
         "version": settings.VERSION,
         "purpose": "Financial Content Verification & Retail Investor Protection",
-        "disclaimer": "TrustLens AI does not provide investment advice or stock recommendations."
+        "disclaimer": "सतर्क SIGHT AI does not provide investment advice or stock recommendations."
     }
 
 if __name__ == "__main__":

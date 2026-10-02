@@ -1,138 +1,139 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
-
-
-# =========================================================
-# EVIDENCE
-# =========================================================
+from datetime import datetime
 
 class EvidenceItem(BaseModel):
-    title: str = ""
-    snippet: str = ""
-    source_url: Optional[str] = None
-    source_name: Optional[str] = None
-    relevance: float = 0.0
-    source_type: str = "web"
-    status: str = "retrieved"
-
-
-# =========================================================
-# CLAIMS
-# =========================================================
+    id: Optional[int] = None
+    source_name: str
+    document_title: str
+    document_date: Optional[str] = None
+    excerpt: str
+    relevance: float = 0.85
+    source_type: str = "Regulatory Filing / Official Disclosure"
+    status: str = "Supports"  # Supports, Contradicts, Inconclusive
 
 class ClaimItem(BaseModel):
-    claim: str
-    claim_type: str = "factual"
-    confidence: Optional[float] = None
-    status: str = "Unverified"
-    explanation: Optional[str] = None
-    evidence: List[EvidenceItem] = Field(default_factory=list)
-
-
-# =========================================================
-# RED FLAGS
-# =========================================================
+    id: Optional[int] = None
+    text: str
+    type: str  # "Future price prediction", "Performance claim", "Official financial metric", "Investment recommendation", "Educational statement"
+    status: str  # "Verified", "Partially Verified", "Unverified", "Contradicted"
+    confidence: float = 0.85
+    evidence: List[EvidenceItem] = []
 
 class RedFlagItem(BaseModel):
-    flag: str
-    severity: str = "medium"
-    explanation: Optional[str] = None
-
-
-# =========================================================
-# DISCLOSURE
-# =========================================================
+    id: Optional[int] = None
+    type: str  # "Guaranteed Returns", "Urgency", "Unrealistic claims", "Emotional manipulation", "Hidden promotion"
+    severity: str  # "High", "Medium", "Low"
+    explanation: str
+    trigger_text: Optional[str] = None
 
 class DisclosureResult(BaseModel):
-    disclosed: bool = False
-    disclosure_text: Optional[str] = None
-    explanation: Optional[str] = None
+    detected: bool
+    status: str  # "Disclosure detected", "Possible promotional content", "No disclosure detected"
+    trigger_text: Optional[str] = None
+    explanation: str
 
-
-# =========================================================
-# ANALYZE RESPONSE
-# =========================================================
+class AnalyzeRequest(BaseModel):
+    content: str = Field(..., min_length=3, description="Financial text to analyze")
+    source_url: Optional[str] = None
+    creator_name: Optional[str] = None
 
 class AnalyzeResponse(BaseModel):
-    overall_status: str = "Potential Risk"
-    risk_level: str = "Medium"
-    summary: Optional[str] = None
-
-    claims: List[ClaimItem] = Field(default_factory=list)
-    red_flags: List[RedFlagItem] = Field(default_factory=list)
-
-    disclosure: Optional[DisclosureResult] = None
-
-    official_source_verification: Optional[str] = None
-
-    actions: List[str] = Field(default_factory=list)
-
-    uncertainty: Optional[str] = (
-        "AI-based verification can contain errors. "
-        "Verify important claims against the original authoritative source."
-    )
-
-    sources: List[EvidenceItem] = Field(default_factory=list)
-
-    metadata: Optional[dict[str, Any]] = None
-
-
-# =========================================================
-# REPORT CREATE
-# =========================================================
+    id: Optional[int] = None
+    overall_status: str  # "Verified", "Partially Verified", "Unverified", "Contradicted", "Potential Risk"
+    risk_level: str  # "High", "Medium", "Low", "Safe"
+    claims: List[ClaimItem] = []
+    recommendation_detected: bool = False
+    red_flags: List[RedFlagItem] = []
+    disclosure: DisclosureResult
+    evidence: List[EvidenceItem] = []
+    explanation: str
+    created_at: Optional[datetime] = None
 
 class ReportCreate(BaseModel):
-    title: Optional[str] = None
-    content: Optional[str] = None
-    source_url: Optional[str] = None
-    creator_handle: Optional[str] = None
-
-
-# =========================================================
-# REPORT RESPONSE
-# =========================================================
+    post_id: Optional[int] = None
+    content_url: Optional[str] = None
+    creator_name: Optional[str] = None
+    reason: str
+    description: str
+    detected_claim: Optional[str] = None
+    screenshot_name: Optional[str] = None
 
 class ReportResponse(BaseModel):
-    id: Any
-    title: Optional[str] = None
-    content: Optional[str] = None
-    source_url: Optional[str] = None
-    creator_handle: Optional[str] = None
+    id: str  # TL-XXXXXX
+    post_id: Optional[int] = None
+    content_url: Optional[str] = None
+    creator_name: Optional[str] = None
+    reason: str
+    description: str
+    status: str = "Received"
+    created_at: datetime
+    regulatory_guidance: Dict[str, Any]
 
-
-# =========================================================
-# SIMULATOR
-# =========================================================
+class SimulatorOption(BaseModel):
+    id: str
+    text: str
 
 class SimulatorQuestion(BaseModel):
+    id: str
+    title: str
+    post_text: str
+    author: str
     question: str
-    options: List[str] = Field(default_factory=list)
-    correct_answer: Optional[str] = None
-    explanation: Optional[str] = None
-
+    options: List[SimulatorOption]
+    explanation: str
+    correct_option: str
+    points: int = 10
+    category: str
 
 class SimulatorAnswerRequest(BaseModel):
-    question: str
+    question_id: str
     answer: str
-
+    user_id: Optional[int] = 1
 
 class SimulatorAnswerResponse(BaseModel):
-    correct: bool = False
-    score: Optional[float] = None
-    explanation: Optional[str] = None
-    correct_answer: Optional[str] = None
+    correct: bool
+    correct_option: str
+    explanation: str
+    points: int
+    streak: int
+    total_score: int
+    level: str
+    badge_unlocked: Optional[str] = None
 
+class StatPoint(BaseModel):
+    date: str
+    verified: int
+    unverified: int
+    contradicted: int
+    high_risk: int
 
-# =========================================================
-# DASHBOARD
-# =========================================================
+class CategoryCount(BaseModel):
+    name: str
+    count: int
+    severity: str
 
 class DashboardStatsResponse(BaseModel):
-    total_reports: int = 0
-    total_claims: int = 0
-    verified_claims: int = 0
-    unverified_claims: int = 0
-    contradicted_claims: int = 0
-    high_risk_reports: int = 0
-    medium_risk_reports: int = 0
-    low_risk_reports: int = 0
+    content_analyzed: int
+    claims_verified: int
+    unverified_claims: int
+    high_risk_content: int
+    reports_submitted: int
+    verification_timeline: List[StatPoint]
+    red_flag_categories: List[CategoryCount]
+    claim_status_distribution: List[CategoryCount]
+
+class CreatorProfileResponse(BaseModel):
+    id: int
+    handle: str
+    name: str
+    bio: Optional[str] = None
+    platform: str
+    is_registered_verified: bool
+    posts_analyzed: int
+    verified_claims: int
+    unverified_claims: int
+    contradicted_claims: int
+    promotional_posts: int
+    disclosures_detected: int
+    recent_posts: List[Dict[str, Any]] = []

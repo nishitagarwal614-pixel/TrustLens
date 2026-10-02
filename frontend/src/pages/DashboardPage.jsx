@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import { fetchDashboardStats } from '../services/api';
 
-const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'];
+const PIE_COLORS = ['#138808', '#E09F00', '#ED1C24', '#123A8C'];
 
 export default function DashboardPage({ onNavigate }) {
   const [stats, setStats] = useState(null);
@@ -28,7 +28,7 @@ export default function DashboardPage({ onNavigate }) {
     return (
       <div className="py-16 text-center text-slate-500">
         <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-        <p className="text-xs">Loading TrustLens metrics...</p>
+        <p className="text-xs">Loading सतर्क SIGHT metrics...</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export default function DashboardPage({ onNavigate }) {
             className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold shadow-sm"
           >
             <Award className="w-3.5 h-3.5 text-amber-500" />
-            <span>Red Flag Simulator</span>
+            <span>Practice Mode</span>
           </button>
         </div>
       </div>
@@ -106,22 +106,22 @@ export default function DashboardPage({ onNavigate }) {
             <AreaChart data={stats.verification_timeline} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorVerified" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#138808" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#138808" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorHighRisk" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#ED1C24" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#ED1C24" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D8DEE8" />
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, borderColor: '#D8DEE8' }} />
               <Legend wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
-              <Area type="monotone" dataKey="verified" name="Verified Claims" stroke="#10b981" fillOpacity={1} fill="url(#colorVerified)" />
-              <Area type="monotone" dataKey="high_risk" name="High Risk Flagged" stroke="#ef4444" fillOpacity={1} fill="url(#colorHighRisk)" />
-              <Area type="monotone" dataKey="unverified" name="Unverified" stroke="#f59e0b" fillOpacity={0.2} fill="#f59e0b" />
+              <Area type="monotone" dataKey="verified" name="Verified Claims" stroke="#138808" fillOpacity={1} fill="url(#colorVerified)" />
+              <Area type="monotone" dataKey="high_risk" name="High Risk Flagged" stroke="#ED1C24" fillOpacity={1} fill="url(#colorHighRisk)" />
+              <Area type="monotone" dataKey="unverified" name="Unverified" stroke="#E09F00" fillOpacity={0.2} fill="#E09F00" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -139,11 +139,11 @@ export default function DashboardPage({ onNavigate }) {
           <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.red_flag_categories} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#D8DEE8" />
                 <XAxis type="number" tick={{ fontSize: 11 }} />
                 <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 10 }} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                <Bar dataKey="count" name="Violations Detected" fill="#ef4444" radius={[0, 4, 4, 0]} />
+                <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, borderColor: '#D8DEE8' }} />
+                <Bar dataKey="count" name="Violations Detected" fill="#ED1C24" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import DisclaimerBanner from './components/DisclaimerBanner';
 import Footer from './components/Footer';
+import WelcomePage from './pages/WelcomePage';
 import LandingPage from './pages/LandingPage';
 import AnalyzePage from './pages/AnalyzePage';
 import HistoryPage from './pages/HistoryPage';
@@ -11,9 +12,28 @@ import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import { DEMO_PRESETS } from './data/demoData';
 import { fetchAnalysisDetail } from './services/api';
+import { LanguageProvider } from './context/LanguageContext';
 
 export default function App() {
-  const [activePage, setActivePage] = useState('landing');
+  const [userSession, setUserSession] = useState(() => {
+    try {
+      const saved = localStorage.getItem('trustlens_user_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Start with welcome page if first visit, or landing if session already exists
+  const [activePage, setActivePage] = useState(() => {
+    try {
+      const saved = localStorage.getItem('trustlens_user_session');
+      return saved ? 'landing' : 'welcome';
+    } catch {
+      return 'welcome';
+    }
+  });
+
   const [analyzePreset, setAnalyzePreset] = useState(null);
   const [autoRunAnalyze, setAutoRunAnalyze] = useState(false);
 
@@ -53,62 +73,77 @@ export default function App() {
     }
   };
 
+  const handleWelcomeComplete = (session) => {
+    setUserSession(session);
+    setActivePage('landing');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans selection:bg-blue-100 selection:text-blue-900">
-      {/* Top Disclaimer Banner */}
-      <DisclaimerBanner />
+    <LanguageProvider initialSession={userSession} onSessionChange={setUserSession}>
+      {activePage === 'welcome' ? (
+        <WelcomePage
+          initialProfileMode={userSession?.mode || 'profile'}
+          initialLanguage={userSession?.language || 'en'}
+          onComplete={handleWelcomeComplete}
+        />
+      ) : (
+        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800 font-sans selection:bg-blue-100 selection:text-blue-900">
+          {/* Top Disclaimer Banner in Selected Language */}
+          <DisclaimerBanner />
 
-      {/* Navigation Header */}
-      <Navbar
-        activePage={activePage}
-        setActivePage={(p) => handleNavigate(p)}
-        onTriggerDemo={handleTriggerDemo}
-      />
-
-      {/* Main Content View */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {activePage === 'landing' && (
-          <LandingPage
-            onNavigate={handleNavigate}
+          {/* Navigation Header in Selected Language */}
+          <Navbar
+            activePage={activePage}
+            setActivePage={(p) => handleNavigate(p)}
             onTriggerDemo={handleTriggerDemo}
           />
-        )}
 
+          {/* Main Content View in Selected Language */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            {activePage === 'landing' && (
+              <LandingPage
+                onNavigate={handleNavigate}
+                onTriggerDemo={handleTriggerDemo}
+              />
+            )}
 
-        {activePage === 'analyze' && (
-          <AnalyzePage
-            initialPreset={analyzePreset}
-            autoRun={autoRunAnalyze}
-            onNavigate={handleNavigate}
-          />
-        )}
+            {activePage === 'analyze' && (
+              <AnalyzePage
+                initialPreset={analyzePreset}
+                autoRun={autoRunAnalyze}
+                onNavigate={handleNavigate}
+              />
+            )}
 
-        {activePage === 'history' && (
-          <HistoryPage 
-            onSelectAnalysis={handleSelectHistoryItem} 
-            onNavigate={handleNavigate}
-          />
-        )}
+            {activePage === 'history' && (
+              <HistoryPage 
+                onSelectAnalysis={handleSelectHistoryItem} 
+                onNavigate={handleNavigate}
+              />
+            )}
 
-        {activePage === 'creators' && (
-          <CreatorProfilesPage onNavigate={handleNavigate} />
-        )}
+            {activePage === 'creators' && (
+              <CreatorProfilesPage onNavigate={handleNavigate} />
+            )}
 
-        {activePage === 'simulator' && (
-          <SimulatorPage />
-        )}
+            {activePage === 'simulator' && (
+              <SimulatorPage />
+            )}
 
-        {activePage === 'reports' && (
-          <ReportsPage />
-        )}
+            {activePage === 'reports' && (
+              <ReportsPage />
+            )}
 
-        {activePage === 'settings' && (
-          <SettingsPage />
-        )}
-      </main>
+            {activePage === 'settings' && (
+              <SettingsPage />
+            )}
+          </main>
 
-      {/* Footer */}
-      <Footer onNavigate={handleNavigate} />
-    </div>
+          {/* Footer in Selected Language */}
+          <Footer onNavigate={handleNavigate} />
+        </div>
+      )}
+    </LanguageProvider>
   );
 }
