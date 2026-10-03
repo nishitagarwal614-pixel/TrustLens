@@ -1,6 +1,7 @@
 import re
 from typing import List, Dict, Any, Tuple
 
+
 RECOMMENDATION_PATTERNS = [
     r"\bbuy\b(?:\s+[A-Za-z0-9]+|\s+now|\s+immediately)?",
     r"\bsell\b(?:\s+[A-Za-z0-9]+|\s+now)?",
@@ -8,76 +9,193 @@ RECOMMENDATION_PATTERNS = [
     r"\baccumulate\b",
     r"\btarget price\b",
     r"\bentry price\b",
-    r"\bstop loss\b"
+    r"\bstop loss\b",
 ]
 
-def extract_claims_and_recommendations(text: str) -> Tuple[List[Dict[str, Any]], bool]:
+
+def _split_sentences(text: str) -> List[str]:
     """
-    Extracts distinct financial claims and identifies if an investment recommendation is present.
+    Split text into sentences without breaking decimal numbers.
+
+    Examples:
+        6.00% -> stays together
+        5.50% -> stays together
+        6.00% to 5.50%. Next sentence -> splits correctly
     """
+
+    cleaned = re.sub(r"\s+", " ", text.strip())
+
+    if not cleaned:
+        return []
+
+    # Protect decimal points temporarily.
+    # 6.00 -> 6<DECIMAL>00
+    # 5.50 -> 5<DECIMAL>50
+    protected = re.sub(
+        r"(?<=\d)\.(?=\d)",
+        "<DECIMAL>",
+        cleaned,
+    )
+
+    # Split only on actual sentence-ending punctuation.
+    parts = re.split(
+        r"[.!?]+(?=\s+|$)|\n+",
+        protected,
+    )
+
+    sentences = []
+
+    for part in parts:
+        restored = part.replace("<DECIMAL>", ".").strip()
+
+        if len(restored) > 5:
+            sentences.append(restored)
+
+    return sentences
+
+
+def _contains_recommendation(text: str) -> bool:
+    """Return True when the text contains an investment recommendation."""
+
+    for pattern in RECOMMENDATION_PATTERNS:
+        if re.search(pattern, text, re.IGNORECASE):
+            return True
+
+    return False
+
+
+def _classify_claim(sentence: str) -> str:
+    """
+    Classify a claim.
+
+    IMPORTANT:
+    This function does NOT decide whether a claim is true.
+    Verification happens later using live web evidence.
+    """
+
+    sentence_lower = sentence.lower()
+
+    # Future price prediction / return claim
+    future_terms = [
+        "will rise",
+        "will definitely rise",
+        "will double",
+        "will surge",
+        "will fall",
+        "will definitely fall",
+        "to rise",
+        "guaranteed profit",
+        "guaranteed to rise",
+        "target of",
+        "next week",
+        "next month",
+        "10x",
+    ]
+
+    if any(term in sentence_lower for term in future_terms):
+        return "Future price prediction"
+
+    # Official financial metric / company performance
+    financial_terms = [
+        "revenue",
+        "profit",
+        "quarterly report",
+        "results",
+        "growth",
+        "margin",
+        "ebitda",
+        "pat",
+        "year-over-year",
+        "yoy",
+        "units",
+    ]
+
+    if any(term in sentence_lower for term in financial_terms):
+        return "Official financial metric"
+
+    # Macroeconomic / educational statement
+    macro_terms = [
+        "interest rate",
+        "borrowing cost",
+        "inflation",
+        "monetary policy",
+        "rbi",
+        "repo rate",
+        "fed",
+        "sectors",
+    ]
+
+    if any(term in sentence_lower for term in macro_terms):
+        return "Educational / Macroeconomic statement"
+
+    # Promotional / subscription claim
+    promotional_terms = [
+        "referral",
+        "code",
+        "join",
+        "premium",
+        "discount",
+        "tips group",
+    ]
+
+    if any(term in sentence_lower for term in promotional_terms):
+        return "Promotional / Advisory offer"
+
+    # Investment recommendation
+    if _contains_recommendation(sentence):
+        return "Investment recommendation"
+
+    return "Factual assertion"
+
+
+def extract_claims_and_recommendations(
+    text: str,
+) -> Tuple[List[Dict[str, Any]], bool]:
+    """
+    Extract distinct claims from user-provided text.
+
+    This function:
+    - preserves decimal numbers such as 6.00% and 5.50%
+    - detects investment recommendations
+    - classifies claims
+    - NEVER marks a claim as verified
+    """
+
     cleaned = text.strip()
-    sentences = [s.strip() for s in re.split(r'[.!?\n]+', cleaned) if len(s.strip()) > 5]
 
-    claims = []
-    recommendation_detected = False
+    if not cleaned:
+        return [], False
 
-    # Check for direct recommendation
-    for pat in RECOMMENDATION_PATTERNS:
-        if re.search(pat, text, re.IGNORECASE):
-            recommendation_detected = True
-            break
+    sentences = _split_sentences(cleaned)
 
-    for s in sentences:
-        s_lower = s.lower()
+    recommendation_detected = _contains_recommendation(cleaned)
 
-        # Future price prediction or return claim
-        if any(term in s_lower for term in ["will rise", "will definitely rise", "will double", "will surge", "to rise", "guaranteed profit", "guaranteed to rise", "target of", "next week", "next month", "10x", "50%"]):
-            claims.append({
-                "text": s,
-                "type": "Future price prediction",
+    claims: List[Dict[str, Any]] = []
+
+    for sentence in sentences:
+        claim_type = _classify_claim(sentence)
+
+        claims.append(
+            {
+                "text": sentence,
+                "type": claim_type,
                 "status": "Unverified",
-                "confidence": 0.91
-            })
-        # Official financial metric / company performance
-        elif any(term in s_lower for term in ["revenue", "profit", "quarterly report", "results", "growth", "margin", "ebitda", "pat", "year-over-year", "yoy", "units"]):
-            claims.append({
-                "text": s,
-                "type": "Official financial metric",
-                "status": "Unverified",  # will be verified against RAG evidence
-                "confidence": 0.88
-            })
-        # Macroeconomic or educational statement
-        elif any(term in s_lower for term in ["interest rate", "borrowing cost", "inflation", "monetary policy", "rbi", "repo rate", "fed", "sectors"]):
-            claims.append({
-                "text": s,
-                "type": "Educational / Macroeconomic statement",
-                "status": "Verified",
-                "confidence": 0.94
-            })
-        # Promotional / subscription claim
-        elif any(term in s_lower for term in ["referral", "code", "join", "premium", "discount", "tips group"]):
-            claims.append({
-                "text": s,
-                "type": "Promotional / Advisory offer",
-                "status": "Unverified",
-                "confidence": 0.90
-            })
-        # Recommendation as a claim
-        elif any(re.search(pat, s, re.IGNORECASE) for pat in RECOMMENDATION_PATTERNS):
-            claims.append({
-                "text": s,
-                "type": "Investment recommendation",
-                "status": "Unverified",
-                "confidence": 0.89
-            })
+                "confidence": None,
+                "evidence": [],
+            }
+        )
 
-    # If no specific patterns matched individual sentences, create a general claim from the input text
+    # If sentence extraction somehow fails,
+    # preserve the complete original input.
     if not claims:
-        claims.append({
-            "text": cleaned[:120] + ("..." if len(cleaned) > 120 else ""),
-            "type": "Financial assertion",
-            "status": "Unverified",
-            "confidence": 0.80
-        })
+        claims.append(
+            {
+                "text": cleaned,
+                "type": "Factual assertion",
+                "status": "Unverified",
+                "confidence": None,
+                "evidence": [],
+            }
+        )
 
     return claims, recommendation_detected

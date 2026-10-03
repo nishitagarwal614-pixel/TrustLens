@@ -1,128 +1,323 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
+
 from app.database.session import get_db
-from app.models.database_models import Post, Claim, RedFlag, Evidence
+from app.models.database_models import (
+    Post,
+    Claim,
+    RedFlag,
+    Evidence,
+)
+
 
 router = APIRouter()
 
+
+def _serialize_evidence(ev: Evidence) -> dict:
+    return {
+        "id": ev.id,
+        "source_name": ev.source_name,
+        "document_title": ev.document_title,
+        "document_date": ev.document_date,
+        "excerpt": ev.excerpt,
+        "source_url": ev.source_url,
+        "relevance": ev.relevance,
+        "source_type": ev.source_type,
+        "status": ev.status,
+    }
+
+
+def _serialize_claim(claim: Claim) -> dict:
+    return {
+        "id": claim.id,
+        "text": claim.claim_text,
+        "type": claim.claim_type,
+        "status": claim.status,
+        "confidence": claim.confidence,
+        "evidence": [
+            _serialize_evidence(ev)
+            for ev in claim.evidence_items
+        ],
+    }
+
+
+def _serialize_red_flag(flag: RedFlag) -> dict:
+    return {
+        "id": flag.id,
+        "type": flag.category,
+        "severity": flag.severity,
+        "explanation": flag.explanation,
+        "trigger_text": flag.trigger_text,
+    }
+
+
+def _serialize_history_item(post: Post) -> dict:
+    return {
+        "id": post.id,
+        "content": post.content,
+        "source_url": post.source_url,
+        "creator_handle": (
+            post.creator.handle
+            if post.creator
+            else "Anonymous / Unknown"
+        ),
+        "overall_status": post.overall_status,
+        "risk_level": post.risk_level,
+        "claims_count": len(post.claims),
+        "red_flags_count": len(post.red_flags),
+        "evidence_count": sum(
+            len(claim.evidence_items)
+            for claim in post.claims
+        ),
+        "recommendation_detected": bool(
+            post.recommendation_detected
+        ),
+        "disclosure_status": post.disclosure_status,
+        "created_at": (
+            post.created_at.isoformat()
+            if post.created_at
+            else None
+        ),
+    }
+
+
 @router.get("/history")
 def get_verification_history(
-    status_filter: Optional[str] = Query(None, description="Filter by status: High Risk, Unverified, Verified, Contradicted"),
-    db: Session = Depends(get_db)
+    status_filter: Optional[str] = Query(
+        None,
+        description=(
+            "Filter by overall status or risk level. "
+            "Examples: Verified, Unverified, "
+            "Contradicted, Needs more evidence, High"
+        ),
+    ),
+    limit: int = Query(
+        50,
+        ge=1,
+        le=200,
+        description="Maximum number of history records to return.",
+    ),
+    offset: int = Query(
+        0,
+        ge=0,
+        description="Number of records to skip.",
+    ),
+    db: Session = Depends(get_db),
 ):
     query = db.query(Post).order_by(Post.created_at.desc())
-    posts = query.all()
-    results = []
 
-    for p in posts:
-        # Determine filter match
-        if status_filter:
-            sf_lower = status_filter.lower().replace(" ", "")
-            status_match = False
-            if sf_lower in p.overall_status.lower().replace(" ", "") or sf_lower in p.risk_level.lower():
-                status_match = True
-            if not status_match:
-                continue
+    posts = query.offset(offset).limit(limit).all()
 
-        claims_count = len(p.claims)
-        red_flags_count = len(p.red_flags)
-        
-        results.append({
-            "id": p.id,
-            "content": p.content,
-            "source_url": p.source_url,
-            "creator_handle": p.creator.handle if p.creator else "Anonymous / Unknown",
-            "overall_status": p.overall_status,
-            "risk_level": p.risk_level,
-            "claims_count": claims_count,
-            "red_flags_count": red_flags_count,
-            "recommendation_detected": p.recommendation_detected,
-            "disclosure_status": p.disclosure_status,
-            "created_at": p.created_at.isoformat() if p.created_at else None
-        })
+    if status_filter:
+        filter_value = status_filter.strip().lower()
 
-    return results
+        posts = [
+            post
+            for post in posts
+            if (
+                filter_value
+                in (post.overall_status or "").lower()
+                or filter_value
+                in (post.risk_level or "").lower()
+            )
+        ]
+
+    return {
+        "count": len(posts),
+        "limit": limit,
+        "offset": offset,
+        "results": [
+            _serialize_history_item(post)
+            for post in posts
+        ],
+    }
+
 
 @router.get("/analysis/{post_id}")
-def get_analysis_detail(post_id: int, db: Session = Depends(get_db)):
-    post = db.query(Post).filter(Post.id == post_id).first()
+def get_analysis_detail(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    post = (
+        db.query(Post)
+        .filter(Post.id == post_id)
+        .first()
+    )
+
     if not post:
-        raise HTTPException(status_code=404, detail="Analysis record not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Analysis record not found.",
+        )
 
-    claims_data = []
+    claims = [
+        _serialize_claim(claim)
+        for claim in post.claims
+    ]
+
+    red_flags = [
+        _serialize_red_flag(flag)
+        for flag in post.red_flags
+    ]
+
     all_evidence = []
-    for c in post.claims:
-        ev_items = []
-        for ev in c.evidence_items:
-            item = {
-                "source_name": ev.source_name,
-                "document_title": ev.document_title,
-                "document_date": ev.document_date,
-                "excerpt": ev.excerpt,
-                "source_url": ev.source_url,
-                "relevance": ev.relevance,
-                "source_type": ev.source_type,
-                "status": ev.status
-            }
-            ev_items.append(item)
-            all_evidence.append(item)
 
-        claims_data.append({
-            "id": c.id,
-            "text": c.claim_text,
-            "type": c.claim_type,
-            "status": c.status,
-            "confidence": c.confidence,
-            "evidence": ev_items
-        })
+    for claim in post.claims:
+        for evidence in claim.evidence_items:
+            all_evidence.append(
+                _serialize_evidence(evidence)
+            )
 
-    red_flags_data = []
-    for rf in post.red_flags:
-        red_flags_data.append({
-            "type": rf.category,
-            "severity": rf.severity,
-            "explanation": rf.explanation,
-            "trigger_text": rf.trigger_text
-        })
+    disclosure_text = (
+        post.disclosure_status
+        or "No disclosure detected"
+    )
+
+    disclosure_lower = disclosure_text.lower()
+
+    disclosure_detected = (
+        "detected" in disclosure_lower
+        and "no disclosure" not in disclosure_lower
+    )
 
     return {
         "id": post.id,
         "content": post.content,
         "source_url": post.source_url,
-        "creator_handle": post.creator.handle if post.creator else "Anonymous",
+        "creator_handle": (
+            post.creator.handle
+            if post.creator
+            else "Anonymous / Unknown"
+        ),
         "overall_status": post.overall_status,
         "risk_level": post.risk_level,
-        "recommendation_detected": post.recommendation_detected,
+        "recommendation_detected": bool(
+            post.recommendation_detected
+        ),
         "disclosure": {
-            "detected": "detected" in post.disclosure_status.lower() and "no" not in post.disclosure_status.lower(),
-            "status": post.disclosure_status,
-            "explanation": "Stored historical disclosure assessment."
+            "detected": disclosure_detected,
+            "status": disclosure_text,
+            "explanation": (
+                "Disclosure assessment stored "
+                "with the original analysis."
+            ),
         },
-        "claims": claims_data,
-        "red_flags": red_flags_data,
+        "claims": claims,
+        "red_flags": red_flags,
         "evidence": all_evidence,
-        "explanation": post.explanation or "Historical analysis record.",
-        "created_at": post.created_at.isoformat() if post.created_at else None
+        "explanation": (
+            post.explanation
+            or "Historical analysis record."
+        ),
+        "created_at": (
+            post.created_at.isoformat()
+            if post.created_at
+            else None
+        ),
     }
 
-@router.delete("/analysis/{post_id}")
-def delete_analysis_record(post_id: int, db: Session = Depends(get_db)):
-    post = db.query(Post).filter(Post.id == post_id).first()
+
+@router.get("/analysis/{post_id}/claims")
+def get_analysis_claims(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    post = (
+        db.query(Post)
+        .filter(Post.id == post_id)
+        .first()
+    )
+
     if not post:
-        raise HTTPException(status_code=404, detail="Record not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Analysis record not found.",
+        )
+
+    return {
+        "post_id": post.id,
+        "claims": [
+            _serialize_claim(claim)
+            for claim in post.claims
+        ],
+    }
+
+
+@router.get("/analysis/{post_id}/evidence")
+def get_analysis_evidence(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    post = (
+        db.query(Post)
+        .filter(Post.id == post_id)
+        .first()
+    )
+
+    if not post:
+        raise HTTPException(
+            status_code=404,
+            detail="Analysis record not found.",
+        )
+
+    evidence_items = []
+
+    for claim in post.claims:
+        for evidence in claim.evidence_items:
+            item = _serialize_evidence(evidence)
+            item["claim_id"] = claim.id
+            item["claim_text"] = claim.claim_text
+            evidence_items.append(item)
+
+    return {
+        "post_id": post.id,
+        "count": len(evidence_items),
+        "results": evidence_items,
+    }
+
+
+@router.delete("/analysis/{post_id}")
+def delete_analysis_record(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    post = (
+        db.query(Post)
+        .filter(Post.id == post_id)
+        .first()
+    )
+
+    if not post:
+        raise HTTPException(
+            status_code=404,
+            detail="Analysis record not found.",
+        )
+
     db.delete(post)
     db.commit()
-    return {"status": "success", "message": f"Analysis {post_id} removed."}
+
+    return {
+        "status": "success",
+        "message": f"Analysis {post_id} removed.",
+        "deleted_id": post_id,
+    }
+
 
 @router.delete("/history")
-def clear_all_history(db: Session = Depends(get_db)):
-    from app.models.database_models import Report
-    db.query(Report).filter(Report.post_id.isnot(None)).update({"post_id": None})
-    db.query(Evidence).delete()
-    db.query(RedFlag).delete()
-    db.query(Claim).delete()
-    db.query(Post).delete()
-    db.commit()
-    return {"status": "success", "message": "All verification history removed."}
+def clear_all_history(
+    db: Session = Depends(get_db),
+):
+    deleted_count = db.query(Post).count()
 
+    db.query(Post).delete(
+        synchronize_session=False
+    )
+
+    db.commit()
+
+    return {
+        "status": "success",
+        "message": "All verification history removed.",
+        "deleted_count": deleted_count,
+    }

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, RotateCcw, Sparkles, AlertCircle, FileText, ArrowRight } from 'lucide-react';
+import {
+  Search,
+  RotateCcw,
+  Sparkles,
+  AlertCircle
+} from 'lucide-react';
+
 import { analyzeContent } from '../services/api';
 import AnalysisLoading from '../components/AnalysisLoading';
 import ResultPage from './ResultPage';
@@ -7,8 +13,13 @@ import { DEMO_PRESETS } from '../data/demoData';
 import { useLanguage } from '../context/LanguageContext';
 import VoiceInputButton from '../components/VoiceInputButton';
 
-export default function AnalyzePage({ initialPreset = null, autoRun = false, onNavigate }) {
+export default function AnalyzePage({
+  initialPreset = null,
+  autoRun = false,
+  onNavigate
+}) {
   const { t, language } = useLanguage();
+
   const [content, setContent] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
   const [creatorName, setCreatorName] = useState('');
@@ -16,25 +27,42 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  // Handle incoming preset or auto-run
   useEffect(() => {
     if (initialPreset) {
       setContent(initialPreset.content);
       setSourceUrl(initialPreset.sourceUrl || '');
       setCreatorName(initialPreset.creator || '');
+
       if (autoRun) {
-        handleAnalyze(initialPreset.content, initialPreset.sourceUrl, initialPreset.creator);
+        handleAnalyze(
+          initialPreset.content,
+          initialPreset.sourceUrl,
+          initialPreset.creator
+        );
       }
     }
   }, [initialPreset, autoRun]);
 
-  const handleAnalyze = async (textToAnalyze, urlToAnalyze, creatorToAnalyze) => {
-    const targetContent = textToAnalyze !== undefined ? textToAnalyze : content;
-    const targetUrl = urlToAnalyze !== undefined ? urlToAnalyze : sourceUrl;
-    const targetCreator = creatorToAnalyze !== undefined ? creatorToAnalyze : creatorName;
+  const handleAnalyze = async (
+    textToAnalyze,
+    urlToAnalyze,
+    creatorToAnalyze
+  ) => {
+    const targetContent =
+      textToAnalyze !== undefined ? textToAnalyze : content;
+
+    const targetUrl =
+      urlToAnalyze !== undefined ? urlToAnalyze : sourceUrl;
+
+    const targetCreator =
+      creatorToAnalyze !== undefined
+        ? creatorToAnalyze
+        : creatorName;
 
     if (!targetContent || targetContent.trim().length < 5) {
-      setError('Please enter at least 5 characters of financial content to analyze.');
+      setError(
+        'Please enter at least 5 characters of financial content to analyze.'
+      );
       return;
     }
 
@@ -43,11 +71,20 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
     setResult(null);
 
     try {
-      const data = await analyzeContent(targetContent, targetUrl, targetCreator);
+      const data = await analyzeContent(
+        targetContent,
+        targetUrl,
+        targetCreator
+      );
+
       setResult(data);
     } catch (err) {
       console.error('Analyze failed:', err);
-      setError(err.message || 'An error occurred during verification. Please check backend status and retry.');
+
+      setError(
+        err.message ||
+          'An error occurred during verification. Please check backend status and retry.'
+      );
     } finally {
       setLoading(false);
     }
@@ -76,19 +113,26 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           {t?.analyze?.title || 'Analyze Financial Content'}
         </h1>
+
         <p className="text-xs text-slate-500 mt-1">
-          {t?.analyze?.subtitle || 'Paste any financial post, tweet, video caption, or advisory claim to run a comprehensive forensic verification against official sources.'}
+          {t?.analyze?.subtitle ||
+            'Submit a financial post, article, caption, or factual claim for independent verification using live web evidence.'}
         </p>
       </div>
 
-      {/* Input Box Card */}
+      {/* Input Card */}
       <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
-        {/* Preset Selector Chips */}
+        {/* Example Scenarios */}
         <div>
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>{t?.landing?.demoSectionTitle || 'Load Example Scenario:'}</span>
+
+            <span>
+              {t?.landing?.demoSectionTitle ||
+                'Load Example Scenario:'}
+            </span>
           </div>
+
           <div className="flex flex-wrap gap-2">
             {DEMO_PRESETS.map((p) => (
               <button
@@ -106,47 +150,60 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
           </div>
         </div>
 
-        {/* Text Input with Voice Option */}
+        {/* Content Input */}
         <div className="space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <label className="block text-xs font-bold text-slate-700">
               Financial Claim / Post Content:
             </label>
+
             <VoiceInputButton
               buttonText="Speak Financial Content"
               lang={language}
               onTranscript={(spoken) => {
-                setContent((prev) => prev && prev.trim() ? `${prev.trim()} ${spoken}` : spoken);
+                setContent((prev) =>
+                  prev && prev.trim()
+                    ? `${prev.trim()} ${spoken}`
+                    : spoken
+                );
               }}
             />
           </div>
+
           <textarea
             rows={5}
-            placeholder={t?.analyze?.placeholderContent || "Paste a financial post, caption, article or claim here... e.g. 'XYZ stock is guaranteed to rise 50% next week. Buy now!'"}
+            placeholder={
+              t?.analyze?.placeholderContent ||
+              "Paste a financial post, caption, article or claim here..."
+            }
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full p-4 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all font-sans"
           />
         </div>
 
-        {/* Optional Metadata: URL & Creator */}
+        {/* Optional URL & Creator */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 mb-1">
               {t?.analyze?.labelUrl || 'Source URL (Optional)'}
             </label>
+
             <input
               type="url"
-              placeholder="https://twitter.com/... or https://telegram.me/..."
+              placeholder="https://example.com/article"
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
               className="w-full px-3 py-2 border border-slate-200 rounded-md text-xs focus:outline-none focus:border-blue-500"
             />
           </div>
+
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-              {t?.analyze?.labelCreator || 'Creator / Profile Handle (Optional)'}
+              {t?.analyze?.labelCreator ||
+                'Creator / Profile Handle (Optional)'}
             </label>
+
             <input
               type="text"
               placeholder="@CreatorHandle"
@@ -161,12 +218,25 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => handleAnalyze()}
-              disabled={loading || !content.trim()}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold text-xs shadow-sm transition-all hover:scale-102 active:scale-98 cursor-pointer"
+              onClick={() =>
+                handleAnalyze(
+                  content,
+                  sourceUrl,
+                  creatorName
+                )
+              }
+              disabled={loading}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 disabled:bg-blue-300 text-white font-semibold text-xs transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               <Search className="w-3.5 h-3.5" />
-              <span>{loading ? (t?.landing?.scanning || 'Analyzing Content...') : (t?.analyze?.btnAnalyze || 'Analyze Content')}</span>
+
+              <span>
+                {loading
+                  ? t?.landing?.scanning ||
+                    'Analyzing Content...'
+                  : t?.analyze?.btnAnalyze ||
+                    'Analyze Content'}
+              </span>
             </button>
 
             <button
@@ -174,17 +244,20 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
               className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>{t?.analyze?.btnReset || 'Clear'}</span>
+
+              <span>
+                {t?.analyze?.btnReset || 'Clear'}
+              </span>
             </button>
           </div>
 
           <span className="text-[11px] text-slate-400">
-            Powered by RAG Official Exchange Filings & NLP Engine
+            Live web search + AI semantic verification
           </span>
         </div>
       </div>
 
-      {/* Error display */}
+      {/* Error */}
       {error && (
         <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-xs text-rose-700 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />
@@ -192,10 +265,10 @@ export default function AnalyzePage({ initialPreset = null, autoRun = false, onN
         </div>
       )}
 
-      {/* Loading state */}
+      {/* Loading */}
       {loading && <AnalysisLoading />}
 
-      {/* Structured Result Display */}
+      {/* Result */}
       {result && !loading && (
         <ResultPage
           result={result}
